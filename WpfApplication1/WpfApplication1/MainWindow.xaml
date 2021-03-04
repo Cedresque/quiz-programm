@@ -14,5 +14,7 @@
         <TextBox x:Name="Frage" HorizontalAlignment="Left" Margin="105,43,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="104" Width="320"/>
         <Label x:Name="Score" Content="Label" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <Button x:Name="Continue" Content="Button" HorizontalAlignment="Left" Margin="228,289,0,0" VerticalAlignment="Top" Width="75" Click="Continue_Click"/>
+        <TextBox x:Name="Finish" HorizontalAlignment="Left" Margin="10,10,10,10" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="299" Width="497"/>
+        <Button x:Name="Restart" Content="Button" HorizontalAlignment="Left" Margin="228,269,0,0" VerticalAlignment="Top" Width="75" Click="Restart_Click"/>
     </Grid>
 </Window>

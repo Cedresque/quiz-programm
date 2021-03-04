@@ -28,21 +28,61 @@ namespace WpfApplication1
         private static SolidColorBrush light_red = new SolidColorBrush(Colors.LightCoral);
         private static SolidColorBrush white = new SolidColorBrush(Colors.White);
         private static SolidColorBrush black = new SolidColorBrush(Colors.Black);
-        private string m_strMySQLConnectionString = "server=localhost;userid=root;password=******;database=quiz_test";
+        private string m_strMySQLConnectionString = "server=localhost;userid=root;password=secret;database=quiz_test";
         private static int question_buffer_size = 7;
         private string[] question_buffer = new string[question_buffer_size];
         private int score = 0;
         private int correct = 3;
-        private int question = 1;
         private int question_count = 0;
+        private int current_question = 0;
+        private int[] question_id_bucket;
 
         public MainWindow()
         {
             InitializeComponent();
+            initGame();
+     
+        }
+
+        private void initDatabase()
+        {
+            try
+            {
+                string directory = AppDomain.CurrentDomain.BaseDirectory;
+                string[] data = System.IO.File.ReadAllLines(directory + "/src/user.txt");
+                m_strMySQLConnectionString = "server=localhost;userid=" + data[0] + ";password=" + data[1] + ";database=quiz_test";
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        private void initGame()
+        {
             initField();
             getCount();
-            question_count = Math.Min(question_count,10);
-            loadNextQuestion();     
+            question_count = Math.Min(question_count, 10);
+            generateQuestions();
+            loadNextQuestion();
+        }
+
+        private void displayFinish()
+        {
+            string finish_text = "Du bist fertig!\n Du hast " + score + " Punkte erreicht!";
+            Finish.Text = finish_text;
+            Finish.Visibility = Visibility.Visible;
+            Restart.Visibility = Visibility.Visible;
+            Continue.Visibility = Visibility.Hidden;
+        }
+
+        private void generateQuestions()
+        {
+            question_id_bucket = new int[question_count];
+            for (int i = 0; i < question_count; i++)
+            {
+                question_id_bucket[i] = i+1;
+            }
         }
 
         private void getCount()
@@ -51,14 +91,21 @@ namespace WpfApplication1
             using (var sqlconn = new MySqlConnection(m_strMySQLConnectionString))
             using (var cmd = new MySqlCommand(command, sqlconn))
             {
-                sqlconn.Open();
-                using (var rd = cmd.ExecuteReader())
+                try
                 {
-                    rd.Read();
-                    question_count = rd.GetInt32(0);
-                    rd.Close();
+                    sqlconn.Open();
+                    using (var rd = cmd.ExecuteReader())
+                    {
+                        rd.Read();
+                        question_count = rd.GetInt32(0);
+                        rd.Close();
+                    }
+                    sqlconn.Close();
                 }
-                sqlconn.Close();
+                catch (MySqlException e)
+                {
+                    MessageBox.Show(e.Message);
+                }
             }
         }
         
@@ -68,18 +115,25 @@ namespace WpfApplication1
             using (var sqlconn = new MySqlConnection(m_strMySQLConnectionString))
             using (var cmd = new MySqlCommand(command, sqlconn))
             {
-                sqlconn.Open();
-                using (var rd = cmd.ExecuteReader())
+                try
                 {
-                    rd.Read();
-                    for (int i = 0; i < question_buffer_size; i++)
+                    sqlconn.Open();
+                    using (var rd = cmd.ExecuteReader())
                     {
-                        question_buffer[i] = rd.GetString(i);
-                    }
+                        rd.Read();
+                        for (int i = 0; i < question_buffer_size; i++)
+                        {
+                            question_buffer[i] = rd.GetString(i);
+                        }
 
-                    rd.Close();
+                        rd.Close();
+                    }
+                    sqlconn.Close();
                 }
-                sqlconn.Close();
+                catch (MySqlException e)
+                {
+                    MessageBox.Show(e.Message);
+                }
             }
         }
 
@@ -189,26 +243,49 @@ namespace WpfApplication1
             Score.Content = "Score: " + score.ToString();
             Continue.Visibility = Visibility.Hidden;
             Continue.Content = "Fortfahren";
+            Finish.Visibility = Visibility.Hidden;
+            Finish.FontSize = 40;
+            Finish.Background = blue;
+            Finish.BorderBrush = black;
+            Finish.IsReadOnly = true;
+            Finish.HorizontalContentAlignment = HorizontalAlignment.Center;
+            Finish.VerticalContentAlignment = VerticalAlignment.Center;
+            Restart.Visibility = Visibility.Hidden;
+            Restart.Content = "Neue Runde";
+            current_question = 0;
+            score = 0;
         }
 
         private void loadNextQuestion()
         {
-            getQuestion(question);
-
-            Background = white;
-
-            correct = Convert.ToInt32(question_buffer[5]);
-
-            for(int button_id = 1; button_id < 5; button_id++)
+            if (current_question < question_count)
             {
-                selectButton(button_id).Background = blue;
-                selectButton(button_id).Content = question_buffer[button_id];
+                getQuestion(question_id_bucket[current_question]);
+
+                Background = white;
+
+                correct = Convert.ToInt32(question_buffer[5]);
+
+                for (int button_id = 1; button_id < 5; button_id++)
+                {
+                    selectButton(button_id).Background = blue;
+                    selectButton(button_id).Content = question_buffer[button_id];
+                }
+
+                Frage.Background = blue;
+                Frage.Text = question_buffer[6];
+
+                Continue.Visibility = Visibility.Hidden;
+                current_question += 1;
+            }else
+            {
+                displayFinish();
             }
+        }
 
-            Frage.Background = blue;
-            Frage.Text = question_buffer[6];
-
-            Continue.Visibility = Visibility.Hidden;
+        private void Restart_Click(object sender, RoutedEventArgs e)
+        {
+            initGame();
         }
     }
 }
