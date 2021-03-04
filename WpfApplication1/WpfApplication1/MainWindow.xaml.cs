@@ -49,7 +49,7 @@ namespace WpfApplication1
             try
             {
                 string directory = AppDomain.CurrentDomain.BaseDirectory;
-                string[] data = System.IO.File.ReadAllLines(directory + "/src/user.txt");
+                string[] data = System.IO.File.ReadAllLines(directory + "/user.txt");
                 m_strMySQLConnectionString = "server=localhost;userid=" + data[0] + ";password=" + data[1] + ";database=quiz_test";
             }
             catch(Exception e)

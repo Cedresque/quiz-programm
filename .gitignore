@@ -349,3 +349,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 /WpfApplication1/WpfApplication1/src/user.txt
+/WpfApplication1/WpfApplication1/user.txt
