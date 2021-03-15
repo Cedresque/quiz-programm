@@ -21,6 +21,7 @@ namespace WpfApplication1
     /// </summary>
     public partial class MainWindow : Window
     {
+        //Festlegen der Farben
         private static SolidColorBrush blue = new SolidColorBrush(Colors.LightBlue);
         private static SolidColorBrush red = new SolidColorBrush(Colors.Red);
         private static SolidColorBrush green = new SolidColorBrush(Colors.Green);
@@ -28,22 +29,45 @@ namespace WpfApplication1
         private static SolidColorBrush light_red = new SolidColorBrush(Colors.LightCoral);
         private static SolidColorBrush white = new SolidColorBrush(Colors.White);
         private static SolidColorBrush black = new SolidColorBrush(Colors.Black);
-        private string m_strMySQLConnectionString = "server=localhost;userid=root;password=secret;database=quiz_test";
+
+        //Variable für Verbindung mit der Datenbank
+        private string m_strMySQLConnectionString;
+
+        //Variablen für das Auslesen der Datenbank
         private static int question_buffer_size = 7;
         private string[] question_buffer = new string[question_buffer_size];
+        
+        //Variablen für Kontrolle des Spiels
         private int score = 0;
-        private int correct = 3;
+        private int correct;
         private int question_count = 0;
         private int current_question = 0;
         private int[] question_id_bucket;
 
+        //starten der Aplikation
         public MainWindow()
         {
             InitializeComponent();
+            //Initialisierung und Starten des Spiels
             initGame();
      
         }
 
+        //Initialisierung des Spiels
+        private void initGame()
+        {
+            //Laden der Grundvariablen
+            initField();
+            //Laden der Fragenanzahl
+            getCount();
+            question_count = Math.Min(question_count, 10);
+            //Auswahl der Fragen
+            generateQuestions();
+            //Laden der ersten Frage
+            loadNextQuestion();
+        }
+
+        //erste Datenbankverbindung
         private void initDatabase()
         {
             try
@@ -58,15 +82,7 @@ namespace WpfApplication1
             }
         }
 
-        private void initGame()
-        {
-            initField();
-            getCount();
-            question_count = Math.Min(question_count, 10);
-            generateQuestions();
-            loadNextQuestion();
-        }
-
+        //Endpunktstand anzeigen
         private void displayFinish()
         {
             string finish_text = "Du bist fertig!\n Du hast " + score + " Punkte erreicht!";
@@ -76,15 +92,18 @@ namespace WpfApplication1
             Continue.Visibility = Visibility.Hidden;
         }
 
+        //"zufällige" Auswahl der Fragen
         private void generateQuestions()
         {
             question_id_bucket = new int[question_count];
+            //TODO: Zufallsgorithmus für FragenID's einfügen
             for (int i = 0; i < question_count; i++)
             {
                 question_id_bucket[i] = i+1;
             }
         }
-
+        
+        //Gibt Anzahl aller Fragen in der Datenbank zurück
         private void getCount()
         {
             string command = "select count(id) from fragen";
@@ -109,6 +128,7 @@ namespace WpfApplication1
             }
         }
         
+        //Rückgabe der Frage mit der ID "question_id"
         private void getQuestion(int question_id)
         {
             string command = "select * from fragen where id="+question_id.ToString();
@@ -137,6 +157,7 @@ namespace WpfApplication1
             }
         }
 
+        //Matchen von Button und Button_id
         private Button selectButton(int button_id)
         {
             switch (button_id)
@@ -148,7 +169,8 @@ namespace WpfApplication1
                 default: return null;
             }
         }
-
+        
+       //Festlegen der Clickevents von den Antwort-Buttons
        private void Antwort_A_Click(object sender, RoutedEventArgs e)
         {
             Antwort_Clicked(1);
@@ -169,10 +191,14 @@ namespace WpfApplication1
             Antwort_Clicked(4);
         }
 
+        //Auswerten der Antwort
+        //Korrekte Antwort: grünes Leuchten;Score +
+        //Falsche Antwort: rotes Leuchten;
         private int Antwort_Clicked(int answer)
         {
             if (!isAnswered())
             {
+                //Sollte nächste Frage noch nicht geladen sein, werden Clickevents ignoriert
                 Continue.Visibility = Visibility.Visible;
                 if (isCorrect(answer))
                 {
@@ -196,6 +222,7 @@ namespace WpfApplication1
             }
         }
 
+        //Auswertung ob Antwort korrekt
         private bool isCorrect(int number) {
             if(number == correct)
             {
@@ -207,7 +234,8 @@ namespace WpfApplication1
             }
 
         }
-
+        
+        //Überprüfung ob Frage noch beantwortet werden kann
         private bool isAnswered()
         {
             if (Continue.Visibility == Visibility.Visible)
@@ -220,13 +248,17 @@ namespace WpfApplication1
             }
         }
 
+        //Clickevent beim klicken auf Continue
+        //Laden der nächsten Frage
         private void Continue_Click(object sender, RoutedEventArgs e)
         {
             loadNextQuestion();
         }
 
+        //Festsetzen der globalen Variablen; Aufbau des Grundsetups inklusive Farbe und Inhalt;
         private void initField()
         {
+            //Antwort-Buttons initialisieren
             Button[] alle_Btn = { Antwort_A, Antwort_B, Antwort_C, Antwort_D };
             foreach (Button btn in alle_Btn)
             {
@@ -234,15 +266,19 @@ namespace WpfApplication1
                 btn.Background = blue;
                 btn.BorderBrush = black;
             }
+            //Fragenfeld initialisieren
             Frage.FontSize = 18;
             Frage.Background = blue;
             Frage.BorderBrush = black;
             Frage.HorizontalContentAlignment = HorizontalAlignment.Center;
             Frage.VerticalContentAlignment = VerticalAlignment.Center;
             Frage.IsReadOnly = true;
+            //Scorefeld initialisieren
             Score.Content = "Score: " + score.ToString();
+            //Continue-Button initialisieren
             Continue.Visibility = Visibility.Hidden;
             Continue.Content = "Fortfahren";
+            //Endbildschirm initialisieren
             Finish.Visibility = Visibility.Hidden;
             Finish.FontSize = 40;
             Finish.Background = blue;
@@ -250,12 +286,16 @@ namespace WpfApplication1
             Finish.IsReadOnly = true;
             Finish.HorizontalContentAlignment = HorizontalAlignment.Center;
             Finish.VerticalContentAlignment = VerticalAlignment.Center;
+            //Restart-Button initialisieren
             Restart.Visibility = Visibility.Hidden;
             Restart.Content = "Neue Runde";
+            //Punkt- und Fragenzahl auf 0 setzen
             current_question = 0;
             score = 0;
         }
 
+        //Laden der nächsten Frage inklusive Antwort
+        //Zeigen des Endbildschirms, wenn alle Fragen beantwortet
         private void loadNextQuestion()
         {
             if (current_question < question_count)
@@ -282,7 +322,8 @@ namespace WpfApplication1
                 displayFinish();
             }
         }
-
+        
+        //Clickevent des Restart-Buttons
         private void Restart_Click(object sender, RoutedEventArgs e)
         {
             initGame();
