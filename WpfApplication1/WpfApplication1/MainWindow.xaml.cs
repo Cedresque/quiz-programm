@@ -31,7 +31,7 @@ namespace WpfApplication1
         private static SolidColorBrush black = new SolidColorBrush(Colors.Black);
 
         //Variable für Verbindung mit der Datenbank
-        private string m_strMySQLConnectionString;
+        private string DatenbankVerbindungsString;
 
         //Variablen für das Auslesen der Datenbank
         private static int question_buffer_size = 7;
@@ -115,7 +115,7 @@ namespace WpfApplication1
             {
                 string directory = AppDomain.CurrentDomain.BaseDirectory;
                 string[] data = System.IO.File.ReadAllLines(directory + "/user.txt");
-                m_strMySQLConnectionString = "server=localhost;userid=" + data[0] + ";password=" + data[1] + ";database=quiz_test";
+                DatenbankVerbindungsString = "server=localhost;userid=" + data[0] + ";password=" + data[1] + ";database=quiz_test";
             }
             catch (Exception e)
             {
@@ -127,7 +127,7 @@ namespace WpfApplication1
         private void getCount()
         {
             string command = "select count(id) from fragen";
-            using (var sqlconn = new MySqlConnection(m_strMySQLConnectionString))
+            using (var sqlconn = new MySqlConnection(DatenbankVerbindungsString))
             using (var cmd = new MySqlCommand(command, sqlconn))
             {
                 try
@@ -193,7 +193,7 @@ namespace WpfApplication1
         private void getQuestion(int question_id)
         {
             string command = "select * from fragen where id="+question_id.ToString();
-            using (var sqlconn = new MySqlConnection(m_strMySQLConnectionString))
+            using (var sqlconn = new MySqlConnection(DatenbankVerbindungsString))
             using (var cmd = new MySqlCommand(command, sqlconn))
             {
                 try
